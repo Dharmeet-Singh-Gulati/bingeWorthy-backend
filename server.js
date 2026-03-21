@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import OpenAI from "openai";
 import {
-  API_MOVIES_NOW_PLAYING,
   API_POPPULAR_MOVIES,
   API_TOP_RATED,
   MOVIE_DETAILS_API,
@@ -17,9 +16,21 @@ const app = express();
 
 app.use(express.json());
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://streamgpt-80b01.web.app",
+  "https://streamgpt-80b01.firebaseapp.com/*",
+];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
   }),
 );
 
