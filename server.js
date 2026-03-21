@@ -23,7 +23,7 @@ app.use(
   }),
 );
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 const openai = new OpenAI({
   baseURL: "https://router.huggingface.co/v1",
@@ -86,14 +86,24 @@ const fetchFromTmdb = async (url, params = {}) => {
 
 // 🎬 Now Playing
 app.get("/api/now-playing", async (req, res) => {
-  const page = req.query.page || 1;
-
   try {
-    console.log("Now playing");
-    const data = await fetchFromTmdb(API_MOVIES_NOW_PLAYING, { page });
+    const { page = 1 } = req.query; // 👈 IMPORTANT
+    console.log("Now playing, page:", page);
+
+    const data = await fetchFromTmdb(
+      "https://api.themoviedb.org/3/discover/movie",
+      {
+        include_adult: false,
+        include_video: false,
+        language: "en-US",
+        sort_by: "popularity.desc",
+        page, // 👈 passes to TMDB
+      },
+    );
+
     res.json(data);
-  } catch {
-    res.status(500).json({ error: "Failed to fetch now playing movies" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch movies" });
   }
 });
 
@@ -160,6 +170,68 @@ app.get("/api/movie/:id", async (req, res) => {
     res.json(data);
   } catch {
     res.status(500).json({ error: "Failed to fetch movie details" });
+  }
+});
+
+// Cast Details 🤵
+app.get("/api/movie/:id/cast", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: "Invalid movie ID" });
+  }
+
+  try {
+    console.log("🎭 Cast request for:", id);
+
+    const data = await fetchFromTmdb(`${MOVIE_DETAILS_API}${id}/credits`);
+
+    res.json(data);
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch movie cast" });
+  }
+});
+
+//Recommendations 🎬
+app.get("/api/movie/:id/recommendations", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: "Invalid movie ID" });
+  }
+
+  try {
+    console.log("🎬 Recommendations for:", id);
+
+    const data = await fetchFromTmdb(
+      `${MOVIE_DETAILS_API}${id}/recommendations`,
+    );
+
+    res.json(data);
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch recommendations" });
+  }
+});
+
+// Videos 🎥
+app.get("/api/movie/:id/videos", async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({ error: "Invalid movie ID" });
+  }
+
+  try {
+    console.log("🎥 Fetching videos for:", id);
+
+    const data = await fetchFromTmdb(`${MOVIE_DETAILS_API}${id}/videos`);
+
+    res.json(data);
+  } catch (error) {
+    console.error(error.response?.data || error.message);
+    res.status(500).json({ error: "Failed to fetch videos" });
   }
 });
 
