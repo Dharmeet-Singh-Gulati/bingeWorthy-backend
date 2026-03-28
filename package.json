@@ -4,7 +4,8 @@
   "description": "backend server for bingeWorthy",
   "type": "module",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "start": "npx nodemon server.js"
   },
   "author": "Dharmeet Singh Gulati",
   "license": "ISC",

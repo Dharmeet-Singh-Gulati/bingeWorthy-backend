@@ -65,6 +65,7 @@ app.post("/api/gpt-search", async (req, res) => {
           content: `Genre: ${query}`,
         },
       ],
+      max_tokens: 2000,
     });
 
     res.json(completion);
